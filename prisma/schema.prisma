@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model
+model User {
+  id              String        @id @default(uuid())
+  email           String        @unique
+  passwordHash    String?       // Nullable for OAuth users
+  displayName     String?
+  profilePicture  String?
+  bio             String?
+  githubUsername  String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  projects        Project[]
+  interactions    Interaction[]
+  comments        Comment[]
+  
+  @@index([email])
+  @@index([githubUsername])
+}
+
+// Project model
+model Project {
+  id                    String        @id @default(uuid())
+  userId                String
+  title                 String
+  slug                  String        @unique
+  description           String        // Short description (max 150 chars)
+  detailedDescription   String?       @db.Text // Full markdown description
+  coverImage            String?
+  screenshots           String[]      // Array of image URLs
+  demoUrl               String?
+  sourceUrl             String        // GitHub/GitLab URL
+  projectType           ProjectType   @default(OTHER)
+  status                ProjectStatus @default(PENDING)
+  submittedAt           DateTime      @default(now())
+  approvedAt            DateTime?
+  
+  // Engagement metrics
+  engagementScore       Float         @default(0)
+  viewCount             Int           @default(0)
+  likeCount             Int           @default(0)
+  commentCount          Int           @default(0)
+  saveCount             Int           @default(0)
+  
+  // Relations
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags                  ProjectTag[]
+  interactions          Interaction[]
+  comments              Comment[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([slug])
+  @@index([engagementScore])
+  @@index([submittedAt])
+}
+
+enum ProjectType {
+  WEB_APP
+  MOBILE_APP
+  CLI_TOOL
+  LIBRARY
+  GAME
+  OTHER
+}
+
+enum ProjectStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Tag model
+model Tag {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  category  TagCategory
+  slug      String        @unique
+  
+  // Relations
+  projects  ProjectTag[]
+  
+  @@index([category])
+  @@index([slug])
+}
+
+enum TagCategory {
+  LANGUAGE
+  FRONTEND
+  BACKEND
+  DATABASE
+  DEPLOYMENT
+  AI_ML
+}
+
+// ProjectTag junction table (many-to-many)
+model ProjectTag {
+  projectId String
+  tagId     String
+  
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, tagId])
+  @@index([projectId])
+  @@index([tagId])
+}
+
+// Interaction model (tracks all user engagement)
+model Interaction {
+  id        String          @id @default(uuid())
+  userId    String?         // Nullable for anonymous views
+  projectId String
+  type      InteractionType
+  metadata  Json?           // Store additional context (e.g., time on page)
+  createdAt DateTime        @default(now())
+  
+  // Relations
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum InteractionType {
+  VIEW
+  LIKE
+  SAVE
+  COMMENT
+  SHARE
+  CLICK_DEMO
+  CLICK_SOURCE
+}
+
+// Comment model
+model Comment {
+  id        String    @id @default(uuid())
+  userId    String
+  projectId String
+  parentId  String?   // For threaded comments
+  content   String    @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+  
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
