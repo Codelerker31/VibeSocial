@@ -4,12 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import { LoginSchema } from '@/lib/validations';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -31,6 +26,7 @@ export const authOptions: NextAuthOptions = {
           email: profile.email,
           image: profile.avatar_url,
           githubUsername: profile.login,
+          username: profile.login,
         };
       },
     }),
@@ -45,7 +41,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const result = loginSchema.safeParse(credentials);
+        const result = LoginSchema.safeParse(credentials);
 
         if (!result.success) {
           return null;

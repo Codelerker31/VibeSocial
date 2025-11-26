@@ -22,13 +22,13 @@ export const UpdateProfileSchema = z.object({
 export const ProjectSubmissionSchema = z.object({
   title: z.string().min(1, 'Title is required').max(80, 'Title too long'),
   description: z.string().min(1, 'Description is required').max(150, 'Description too long'),
-  detailedDescription: z.string().min(1, 'Detailed description is required'),
-  coverImage: z.string().url('Invalid image URL').optional(),
-  screenshots: z.array(z.string().url()).max(5, 'Maximum 5 screenshots').optional(),
-  demoUrl: z.string().url('Invalid demo URL').optional(),
+  detailedDescription: z.string().min(200, 'Detailed description must be at least 200 characters').max(5000, 'Detailed description too long'),
+  coverImage: z.string().url('Invalid image URL'),
+  screenshots: z.array(z.string().url()).max(4, 'Maximum 4 screenshots').optional(),
+  demoUrl: z.string().url('Invalid demo URL').optional().or(z.literal('')),
   sourceUrl: z.string().url('Invalid source URL'),
   projectType: z.enum(['WEB_APP', 'MOBILE_APP', 'CLI_TOOL', 'LIBRARY', 'GAME', 'OTHER']),
-  tagIds: z.array(z.string().uuid()).min(1, 'At least one tag required').max(10, 'Maximum 10 tags'),
+  tagIds: z.array(z.string().uuid()).min(2, 'At least two tags required').max(8, 'Maximum 8 tags'),
 });
 
 export const ProjectUpdateSchema = ProjectSubmissionSchema.partial();

@@ -15,15 +15,21 @@ datasource db {
 model User {
   id              String        @id @default(uuid())
   email           String        @unique
+  username        String?       @unique // Added for profile URLs
   passwordHash    String?       // Nullable for OAuth users
-  displayName     String?
+  displayName     String?       @db.VarChar(50)
   profilePicture  String?
-  bio             String?
+  bio             String?       @db.VarChar(200)
   githubUsername  String?       @unique
+  resetToken      String?       @unique
+  resetTokenExpiry DateTime?
+  deletedAt       DateTime?     // Soft delete
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
   // Relations
+  accounts        Account[]
+  sessions        Session[]
   projects        Project[]
   interactions    Interaction[]
   comments        Comment[]
@@ -32,14 +38,50 @@ model User {
   @@index([githubUsername])
 }
 
+// NextAuth Models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
 // Project model
 model Project {
   id                    String        @id @default(uuid())
   userId                String
-  title                 String
+  title                 String        @db.VarChar(80)
   slug                  String        @unique
-  description           String        // Short description (max 150 chars)
-  detailedDescription   String?       @db.Text // Full markdown description
+  description           String        @db.VarChar(150) // Short description (max 150 chars)
+  detailedDescription   String?       @db.VarChar(5000) // Full markdown description
   coverImage            String?
   screenshots           String[]      // Array of image URLs
   demoUrl               String?
@@ -103,8 +145,10 @@ enum TagCategory {
   FRONTEND
   BACKEND
   DATABASE
-  DEPLOYMENT
+  CLOUD_INFRA
+  MOBILE
   AI_ML
+  TOOLS
 }
 
 // ProjectTag junction table (many-to-many)
