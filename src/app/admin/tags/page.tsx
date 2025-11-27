@@ -1,6 +1,8 @@
 import { getTags } from '@/lib/tags';
 import { TagManager } from './tag-manager';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TagsAdminPage() {
   const tags = await getTags();
 

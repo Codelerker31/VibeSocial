@@ -16,8 +16,7 @@ import { optimizeImageUrl } from '@/lib/cloudinary';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const CommentSection = dynamic(() => import('@/components/project/CommentSection').then(mod => mod.CommentSection), {
-  loading: () => <div className="h-64 bg-gray-50 rounded-lg animate-pulse" />,
-  ssr: false
+  loading: () => <div className="h-64 bg-gray-50 rounded-lg animate-pulse" />
 });
 
 const MarkdownView = dynamic(() => import('@/components/project/MarkdownView').then(mod => mod.MarkdownView), {

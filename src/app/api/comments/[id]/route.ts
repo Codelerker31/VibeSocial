@@ -52,8 +52,9 @@ export async function PUT(
     const result = EditCommentSchema.safeParse(body);
 
     if (!result.success) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return NextResponse.json(
-        { error: 'Invalid input', details: result.error.errors },
+        { error: 'Invalid input', details: (result.error as any).errors },
         { status: 400 }
       );
     }

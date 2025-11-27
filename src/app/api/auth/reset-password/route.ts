@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'If an account exists, an email has been sent.' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return NextResponse.json({ error: (error as any).errors }, { status: 400 });
     }
     console.error('Reset password error:', error);
     return NextResponse.json(

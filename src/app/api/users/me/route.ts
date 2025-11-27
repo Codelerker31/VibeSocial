@@ -32,7 +32,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(user);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return NextResponse.json({ error: (error as any).errors }, { status: 400 });
     }
     console.error('Profile update error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

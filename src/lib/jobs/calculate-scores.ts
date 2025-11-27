@@ -100,7 +100,6 @@ export async function calculateScoresJob() {
           const finalScore = calculateFinalScore(engagementScore, recencyFactor);
 
           // 4. Update Project
-          // @ts-expect-error - Types are stale due to generation failure
           await prisma.project.update({
             where: { id: project.id },
             data: {

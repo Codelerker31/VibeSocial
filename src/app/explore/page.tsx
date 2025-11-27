@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Browse projects by category and tags',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function ExplorePage() {
   const groupedTags = await getTags();
   const categories = Object.keys(groupedTags);

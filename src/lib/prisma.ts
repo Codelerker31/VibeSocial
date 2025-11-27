@@ -25,7 +25,6 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 // Log slow queries in development
 if (process.env.NODE_ENV === 'development') {
-  // @ts-expect-error - Prisma event types are not fully typed
   prisma.$on('query', (e: { duration: number; query: string }) => {
     if (e.duration > 100) {
       console.warn(`Slow query (${e.duration}ms): ${e.query}`);

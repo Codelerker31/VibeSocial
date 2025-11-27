@@ -14,7 +14,8 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
     return NextResponse.json(
       { 
         error: 'Invalid input. Please check your data.', 
-        details: error.errors,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        details: (error as any).errors,
         code: 'VALIDATION_ERROR'
       },
       { status: 400 }

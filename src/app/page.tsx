@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { FeedGrid } from "@/components/feed/FeedGrid";
 import { FilterSidebar } from "@/components/feed/FilterSidebar";
 import { MobileFilterButton } from "@/components/feed/MobileFilterButton";
@@ -7,6 +8,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTags } from "@/lib/tags";
+import { FeedSkeleton } from "@/components/skeletons/FeedSkeleton";
 
 export default async function Home() {
   const groupedTags = await getTags();
@@ -29,11 +31,15 @@ export default async function Home() {
 
       <div className="flex gap-8">
         {/* Sidebar */}
-        <FilterSidebar groupedTags={groupedTags} />
+        <Suspense fallback={<div className="w-64 hidden lg:block" />}>
+          <FilterSidebar groupedTags={groupedTags} />
+        </Suspense>
         
         {/* Main Feed */}
         <main className="flex-1 min-w-0">
-          <FeedGrid />
+          <Suspense fallback={<FeedSkeleton />}>
+            <FeedGrid />
+          </Suspense>
         </main>
 
         {/* Right Sidebar (Popular Tags) - Desktop only */}
@@ -42,7 +48,9 @@ export default async function Home() {
         </div>
       </div>
 
-      <MobileFilterButton groupedTags={groupedTags} />
+      <Suspense fallback={null}>
+        <MobileFilterButton groupedTags={groupedTags} />
+      </Suspense>
     </div>
   );
 }

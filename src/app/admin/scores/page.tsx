@@ -8,13 +8,10 @@ export default async function AdminScoresPage() {
       id: true,
       title: true,
       engagementScore: true,
-      // @ts-expect-error - Stale types
       recencyFactor: true,
-      // @ts-expect-error - Stale types
       finalScore: true,
-      updatedAt: true,
+      submittedAt: true,
     },
-    // @ts-expect-error - Stale types
     orderBy: { finalScore: 'desc' },
   });
 
@@ -40,7 +37,7 @@ export default async function AdminScoresPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement Score</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recency Factor</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Score</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -50,7 +47,7 @@ export default async function AdminScoresPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.engagementScore.toFixed(2)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{project.recencyFactor?.toFixed(4) || '0.0000'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">{project.finalScore?.toFixed(2) || '0.00'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(project.updatedAt).toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(project.submittedAt).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

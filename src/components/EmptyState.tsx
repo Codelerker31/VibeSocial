@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -29,9 +29,9 @@ export function EmptyState({
       
       {(actionLabel && (actionLink || onAction)) && (
         actionLink ? (
-          <Button asChild>
-            <Link href={actionLink}>{actionLabel}</Link>
-          </Button>
+          <Link href={actionLink} className={buttonVariants()}>
+            {actionLabel}
+          </Link>
         ) : (
           <Button onClick={onAction}>{actionLabel}</Button>
         )

@@ -23,7 +23,6 @@ export async function getProjectScore(projectId: string): Promise<ProjectScoreCa
       where: { id: projectId },
       select: {
         engagementScore: true,
-        // @ts-expect-error - Stale types
         finalScore: true,
       }
     });
@@ -31,7 +30,6 @@ export async function getProjectScore(projectId: string): Promise<ProjectScoreCa
     if (project) {
       const scoreData: ProjectScoreCache = {
         engagementScore: project.engagementScore,
-        // @ts-expect-error - Stale types
         finalScore: project.finalScore || 0,
         lastUpdated: new Date().toISOString()
       };
