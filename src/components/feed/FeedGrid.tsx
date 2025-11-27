@@ -7,7 +7,6 @@ import { ProjectCard } from './ProjectCard';
 import { FeedSkeleton } from '@/components/skeletons/FeedSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { Search } from 'lucide-react';
-import { Project } from '@prisma/client';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -81,6 +80,7 @@ export function FeedGrid({ endpoint = '/api/feed' }: FeedGridProps) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {projects.map((project: any) => (
           <ProjectCard key={project.id} project={project} />
         ))}

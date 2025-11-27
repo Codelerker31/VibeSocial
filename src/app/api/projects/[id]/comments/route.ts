@@ -69,8 +69,8 @@ export async function POST(
     const result = CommentSchema.safeParse(body);
 
     if (!result.success) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return NextResponse.json(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { error: 'Invalid input', details: (result.error as any).errors },
         { status: 400 }
       );
