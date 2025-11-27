@@ -8,8 +8,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { cn } from '@/lib/utils';
-import { MessageSquare, Trash2, Edit2 } from 'lucide-react';
+import { MessageSquare, Trash2 } from 'lucide-react';
+import { CommentSkeleton } from '@/components/skeletons/CommentSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 
 interface CommentSectionProps {
   projectId: string;
@@ -34,7 +35,19 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const { comments, isLoading, isError } = useProjectComments(projectId);
   const { data: session } = useSession();
 
-  if (isLoading) return <div className="py-8 text-center text-gray-500">Loading comments...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <h3 className="text-xl font-semibold text-gray-900">Comments</h3>
+        <div className="space-y-4">
+          <CommentSkeleton />
+          <CommentSkeleton />
+          <CommentSkeleton />
+        </div>
+      </div>
+    );
+  }
+  
   if (isError) return <div className="py-8 text-center text-red-500">Failed to load comments</div>;
 
   // Group comments
@@ -71,7 +84,11 @@ export function CommentSection({ projectId }: CommentSectionProps) {
           />
         ))}
         {rootComments.length === 0 && (
-          <p className="text-center text-gray-500 py-8">No comments yet. Be the first to share your thoughts!</p>
+          <EmptyState
+            icon={MessageSquare}
+            title="No comments yet"
+            description="Be the first to share your thoughts on this project!"
+          />
         )}
       </div>
     </div>

@@ -2,27 +2,33 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Github, FolderPlus } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getCached } from '@/lib/cache-helpers';
+import { EmptyState } from '@/components/EmptyState';
 
 export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const session = await getServerSession(authOptions);
   
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { username: username },
-        { githubUsername: username },
-      ],
-    },
-    include: {
-      projects: {
-        orderBy: { submittedAt: 'desc' },
+  const user = await getCached(
+    `user:profile:${username}`,
+    async () => prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: username },
+          { githubUsername: username },
+        ],
       },
-    },
-  });
+      include: {
+        projects: {
+          orderBy: { submittedAt: 'desc' },
+        },
+      },
+    }),
+    3600 // 1 hour
+  );
 
   if (!user) {
     notFound();
@@ -110,17 +116,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-500">No projects submitted yet.</p>
-          {isOwnProfile && (
-            <Link
-              href="/submit"
-              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Submit a Project
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          icon={FolderPlus}
+          title={isOwnProfile ? "No projects yet" : "No projects found"}
+          description={isOwnProfile ? "Submit your first project to showcase your work!" : "This user hasn't submitted any projects yet."}
+          actionLabel={isOwnProfile ? "Submit Project" : undefined}
+          actionLink={isOwnProfile ? "/submit" : undefined}
+        />
       )}
     </div>
   );

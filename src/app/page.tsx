@@ -1,35 +1,48 @@
+import { FeedGrid } from "@/components/feed/FeedGrid";
+import { FilterSidebar } from "@/components/feed/FilterSidebar";
+import { MobileFilterButton } from "@/components/feed/MobileFilterButton";
+import { PopularTags } from "@/components/feed/PopularTags";
+import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getTags } from "@/lib/tags";
 
-export default function Home() {
+export default async function Home() {
+  const groupedTags = await getTags();
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="text-center max-w-2xl px-4">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl mb-6">
-          DevSocial
-        </h1>
-        <p className="text-lg leading-8 text-gray-600 mb-10">
-          A discovery platform for developers to showcase their code projects.
-          <br />
-          <span className="text-sm text-gray-500">(MVP Work in Progress - Week 3)</span>
-        </p>
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Hero Section */}
+      <section className="flex flex-col md:flex-row items-center justify-between gap-6 py-8 border-b">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Discover innovative code projects</h1>
+          <p className="text-muted-foreground text-lg">
+            A curated feed of projects, ranked by merit and community engagement.
+          </p>
+        </div>
+        <Link href="/submit" className={cn(buttonVariants())}>
+          <Plus className="mr-2 h-4 w-4" />
+          Submit Project
+        </Link>
+      </section>
+
+      <div className="flex gap-8">
+        {/* Sidebar */}
+        <FilterSidebar groupedTags={groupedTags} />
         
-        <div className="flex items-center justify-center gap-x-6">
-          <Link
-            href="/submit"
-            className="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Submit a Project
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-semibold leading-6 text-gray-900 flex items-center"
-          >
-            Log in <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
+        {/* Main Feed */}
+        <main className="flex-1 min-w-0">
+          <FeedGrid />
+        </main>
+
+        {/* Right Sidebar (Popular Tags) - Desktop only */}
+        <div className="hidden xl:block w-80 flex-shrink-0">
+           <PopularTags />
         </div>
       </div>
+
+      <MobileFilterButton groupedTags={groupedTags} />
     </div>
   );
 }

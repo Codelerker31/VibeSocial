@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { invalidateProjectScore } from '@/lib/cache';
 
 export async function POST(
   req: NextRequest,
@@ -70,16 +71,10 @@ export async function POST(
       }
     });
 
-    // Get updated count
-    const updatedProject = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { likeCount: true },
-    });
+    // Invalidate score cache
+    await invalidateProjectScore(projectId);
 
-    return NextResponse.json({
-      liked,
-      likeCount: updatedProject?.likeCount || 0,
-    });
+    return NextResponse.json({ liked, likeCount: liked ? project.likeCount + 1 : project.likeCount - 1 });
   } catch (error) {
     console.error('Error toggling like:', error);
     return NextResponse.json(

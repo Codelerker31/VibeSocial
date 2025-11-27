@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import Image from 'next/image';
+import { SearchBar } from './SearchBar';
 
 export default function Navbar() {
   const { user, isAuthenticated } = useAuth();
@@ -46,6 +47,11 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
+
+          <div className="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end">
+            <SearchBar />
+          </div>
+
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isAuthenticated ? (
               <div className="relative ml-3">

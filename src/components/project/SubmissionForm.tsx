@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { GroupedTags } from '@/lib/tags';
 import { validateGitHubUrl, fetchRepoInfo } from '@/lib/github';
 import { ChevronRight, ChevronLeft, Save, Loader2, Check, X } from 'lucide-react';
-import { TagCategory } from '@prisma/client';
+import { toast } from 'sonner';
 
 interface SubmissionFormProps {
   groupedTags: GroupedTags;
@@ -37,7 +37,7 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
     watch,
     setValue,
     trigger,
-    formState: { errors, isValid },
+    formState: { errors },
     getValues,
   } = useForm<ProjectSubmissionInput>({
     resolver: zodResolver(ProjectSubmissionSchema),
@@ -59,7 +59,7 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
         // We skip files restoration for MVP simplicity or handle URLs if we had them
         Object.keys(parsed).forEach((key) => {
           if (key !== 'coverImage' && key !== 'screenshots') {
-            setValue(key as any, parsed[key]);
+            setValue(key as keyof ProjectSubmissionInput, parsed[key]);
           }
         });
       } catch (e) {
@@ -68,13 +68,31 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
     }
   }, [setValue]);
 
-  // Save draft
+  // Autosave draft
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const values = getValues();
+      // Exclude files
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { coverImage, screenshots, ...rest } = values;
+      // Only save if there's something to save (e.g. title is not empty)
+      if (rest.title || rest.description) {
+        localStorage.setItem('project_submission_draft', JSON.stringify(rest));
+        toast.success('Draft saved automatically');
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [getValues]);
+
+  // Manual save draft
   const saveDraft = () => {
     const values = getValues();
     // Exclude files
-    const { coverImage, screenshots, ...rest } = values as any;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { coverImage, screenshots, ...rest } = values;
     localStorage.setItem('project_submission_draft', JSON.stringify(rest));
-    alert('Draft saved to local storage!');
+    toast.success('Draft saved to local storage!');
   };
 
   const nextStep = async () => {
@@ -148,7 +166,7 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
       // Handle Screenshots
       const screenshots = getValues('screenshots');
       if (Array.isArray(screenshots)) {
-        screenshots.forEach((file: any) => {
+        screenshots.forEach((file: unknown) => {
           if (file instanceof File) {
             formData.append('screenshots', file);
           }
@@ -269,6 +287,7 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 placeholder="A discovery platform for developer projects"
               />
+              <p className="text-xs text-gray-500 text-right">{watch('description')?.length || 0}/150</p>
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
             </div>
 
@@ -299,14 +318,20 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
                 <input
                   {...register('sourceUrl')}
                   onBlur={handleGithubUrlBlur}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.sourceUrl ? 'border-red-300' : watch('sourceUrl') && !repoError ? 'border-green-300' : 'border-gray-300'
+                  }`}
                   placeholder="https://github.com/username/repo"
                 />
-                {repoChecking && (
-                  <div className="absolute right-3 top-2.5">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  </div>
-                )}
+                <div className="absolute right-3 top-2.5 flex items-center gap-2">
+                  {repoChecking && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                  {!repoChecking && !errors.sourceUrl && watch('sourceUrl') && !repoError && (
+                    <Check className="w-4 h-4 text-green-500" />
+                  )}
+                  {!repoChecking && (errors.sourceUrl || repoError) && (
+                    <X className="w-4 h-4 text-red-500" />
+                  )}
+                </div>
               </div>
               {errors.sourceUrl && <p className="text-red-500 text-xs mt-1">{errors.sourceUrl.message}</p>}
               {repoError && <p className="text-red-500 text-xs mt-1">{repoError}</p>}
@@ -314,11 +339,23 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Demo URL</label>
-              <input
-                {...register('demoUrl')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://myproject.com"
-              />
+              <div className="relative">
+                <input
+                  {...register('demoUrl')}
+                  className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.demoUrl ? 'border-red-300' : watch('demoUrl') ? 'border-green-300' : 'border-gray-300'
+                  }`}
+                  placeholder="https://myproject.com"
+                />
+                <div className="absolute right-3 top-2.5">
+                  {!errors.demoUrl && watch('demoUrl') && (
+                    <Check className="w-4 h-4 text-green-500" />
+                  )}
+                  {errors.demoUrl && (
+                    <X className="w-4 h-4 text-red-500" />
+                  )}
+                </div>
+              </div>
               {errors.demoUrl && <p className="text-red-500 text-xs mt-1">{errors.demoUrl.message}</p>}
             </div>
 
@@ -346,7 +383,7 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
                 <ImageUpload
                   label="Cover Image *"
                   onChange={(file) => onChange(file)}
-                  value={value as any}
+                  value={value as File | string | null}
                 />
               )}
             />
@@ -359,12 +396,13 @@ export function SubmissionForm({ groupedTags }: SubmissionFormProps) {
                   <Controller
                     key={index}
                     control={control}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     name={`screenshots.${index}` as any}
                     render={({ field: { onChange, value } }) => (
                       <ImageUpload
                         label={`Screenshot ${index + 1}`}
                         onChange={(file) => onChange(file)}
-                        value={value as any}
+                        value={value as File | string | null}
                         className="h-32"
                       />
                     )}

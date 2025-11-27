@@ -46,7 +46,7 @@ export async function POST(
     return NextResponse.json({ message: 'Password updated successfully' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: (error as any).errors }, { status: 400 });
+      return NextResponse.json({ error: error.errors }, { status: 400 });
     }
     console.error('Reset password error:', error);
     return NextResponse.json(

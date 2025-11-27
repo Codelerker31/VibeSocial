@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { invalidateProjectScore } from '@/lib/cache';
 
 const CommentSchema = z.object({
   content: z.string().min(1).max(5000),
@@ -105,13 +106,13 @@ export async function POST(
       }
     }
 
-    const comment = await prisma.$transaction(async (tx) => {
-      const newComment = await tx.comment.create({
+    const newComment = await prisma.$transaction(async (tx) => {
+      const comment = await tx.comment.create({
         data: {
-          content,
-          parentId,
-          projectId,
+          content: content,
+          projectId: projectId,
           userId: user.id,
+          parentId: parentId,
         },
         include: {
           user: {
@@ -125,6 +126,7 @@ export async function POST(
         },
       });
 
+      // Create interaction for comment
       await tx.interaction.create({
         data: {
           userId: user.id,
@@ -133,15 +135,19 @@ export async function POST(
         },
       });
 
+      // Update project comment count
       await tx.project.update({
         where: { id: projectId },
         data: { commentCount: { increment: 1 } },
       });
 
-      return newComment;
+      return comment;
     });
 
-    return NextResponse.json(comment, { status: 201 });
+    // Invalidate score cache
+    await invalidateProjectScore(projectId);
+
+    return NextResponse.json(newComment, { status: 201 });
   } catch (error) {
     console.error('Error creating comment:', error);
     return NextResponse.json(

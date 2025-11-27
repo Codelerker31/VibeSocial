@@ -1,40 +1,44 @@
 import { prisma } from '@/lib/prisma';
 import { TagCategory } from '@prisma/client';
-import { unstable_cache } from 'next/cache';
+import { getCached } from '@/lib/cache-helpers';
 
 export type GroupedTags = Record<TagCategory, { id: string; name: string; slug: string; category: TagCategory }[]>;
 
-export const getTags = unstable_cache(
-  async () => {
-    const tags = await prisma.tag.findMany({
-      orderBy: { name: 'asc' },
-    });
-    
-    // Group by category
-    const grouped = tags.reduce((acc, tag) => {
-      if (!acc[tag.category]) {
-        acc[tag.category] = [];
-      }
-      acc[tag.category].push(tag);
-      return acc;
-    }, {} as GroupedTags);
+export const getTags = async () => {
+  return getCached(
+    'tags:all',
+    async () => {
+      const tags = await prisma.tag.findMany({
+        orderBy: { name: 'asc' },
+      });
+      
+      // Group by category
+      const grouped = tags.reduce((acc, tag) => {
+        if (!acc[tag.category]) {
+          acc[tag.category] = [];
+        }
+        acc[tag.category].push(tag);
+        return acc;
+      }, {} as GroupedTags);
 
-    return grouped;
-  },
-  ['all-tags'],
-  { revalidate: 3600, tags: ['all-tags'] }
-);
+      return grouped;
+    },
+    24 * 60 * 60 // 24 hours
+  );
+};
 
-export const getTagsByCategory = unstable_cache(
-  async (category: TagCategory) => {
-    return await prisma.tag.findMany({
-      where: { category },
-      orderBy: { name: 'asc' },
-    });
-  },
-  ['tags-by-category'],
-  { revalidate: 3600, tags: ['tags-by-category'] }
-);
+export const getTagsByCategory = async (category: TagCategory) => {
+  return getCached(
+    `tags:category:${category}`,
+    async () => {
+      return await prisma.tag.findMany({
+        where: { category },
+        orderBy: { name: 'asc' },
+      });
+    },
+    3600 // 1 hour
+  );
+};
 
 export async function searchTags(query: string) {
   if (!query) return [];
@@ -50,24 +54,26 @@ export async function searchTags(query: string) {
   });
 }
 
-export const getPopularTags = unstable_cache(
-  async (limit: number = 10) => {
-    const tags = await prisma.tag.findMany({
-      include: {
-        _count: {
-          select: { projects: true },
+export const getPopularTags = async (limit: number = 10) => {
+  return getCached(
+    `tags:popular:${limit}`,
+    async () => {
+      const tags = await prisma.tag.findMany({
+        include: {
+          _count: {
+            select: { projects: true },
+          },
         },
-      },
-      orderBy: {
-        projects: {
-          _count: 'desc',
+        orderBy: {
+          projects: {
+            _count: 'desc',
+          },
         },
-      },
-      take: limit,
-    });
-    
-    return tags;
-  },
-  ['popular-tags'],
-  { revalidate: 3600, tags: ['popular-tags'] }
-);
+        take: limit,
+      });
+      
+      return tags;
+    },
+    7 * 24 * 60 * 60 // 7 days
+  );
+};

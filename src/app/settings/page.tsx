@@ -77,7 +77,7 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Failed to update profile');
 
       setMessage('Profile updated successfully');
-    } catch (err) {
+    } catch {
       setError('Failed to update profile');
     } finally {
       setLoading(false);

@@ -33,8 +33,8 @@ export function CommentForm({ projectId, parentId, onSuccess, onCancel }: Commen
       setContent('');
       setIsPreview(false);
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to post comment');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to post comment');
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { invalidateProjectScore } from '@/lib/cache';
 
 export async function POST(
   req: NextRequest,
@@ -70,15 +71,12 @@ export async function POST(
       }
     });
 
-    // Get updated count
-    const updatedProject = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { saveCount: true },
-    });
+    // Invalidate score cache
+    await invalidateProjectScore(projectId);
 
     return NextResponse.json({
       saved,
-      saveCount: updatedProject?.saveCount || 0,
+      saveCount: saved ? project.saveCount + 1 : project.saveCount - 1,
     });
   } catch (error) {
     console.error('Error toggling save:', error);

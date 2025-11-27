@@ -2,16 +2,31 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { LikeButton } from '@/components/project/LikeButton';
 import { SaveButton } from '@/components/project/SaveButton';
-import { CommentSection } from '@/components/project/CommentSection';
 import { ProjectTracker } from '@/components/project/ProjectTracker';
-import { MarkdownView } from '@/components/project/MarkdownView';
 import { ProjectLinks } from '@/components/project/ProjectLinks';
 import { formatDistanceToNow } from 'date-fns';
+import { getCached } from '@/lib/cache-helpers';
+import { optimizeImageUrl } from '@/lib/cloudinary';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const CommentSection = dynamic(() => import('@/components/project/CommentSection').then(mod => mod.CommentSection), {
+  loading: () => <div className="h-64 bg-gray-50 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const MarkdownView = dynamic(() => import('@/components/project/MarkdownView').then(mod => mod.MarkdownView), {
+  loading: () => <div className="space-y-4">
+    <Skeleton className="h-4 w-full" />
+    <Skeleton className="h-4 w-3/4" />
+    <Skeleton className="h-4 w-5/6" />
+  </div>
+});
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,9 +34,13 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = await prisma.project.findUnique({
-    where: { slug },
-  });
+  const project = await getCached(
+    `project:slug:${slug}`,
+    async () => prisma.project.findUnique({
+      where: { slug },
+    }),
+    900 // 15 minutes
+  );
 
   if (!project) return { title: 'Project Not Found' };
 
@@ -35,24 +54,28 @@ export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   const session = await getServerSession(authOptions);
   
-  const project = await prisma.project.findUnique({
-    where: { slug },
-    include: {
-      user: {
-        select: {
-          id: true,
-          displayName: true,
-          username: true,
-          profilePicture: true,
+  const project = await getCached(
+    `project:full:${slug}`,
+    async () => prisma.project.findUnique({
+      where: { slug },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            username: true,
+            profilePicture: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
         },
       },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-    },
-  });
+    }),
+    900 // 15 minutes
+  );
 
   if (!project) {
     notFound();
@@ -90,11 +113,14 @@ export default async function ProjectPage({ params }: Props) {
         <div className="relative h-64 md:h-80 w-full bg-gray-100">
           {project.coverImage ? (
             <Image
-              src={project.coverImage}
+              src={optimizeImageUrl(project.coverImage, 1200, 630)}
               alt={project.title}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==" // Simple gray placeholder
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">

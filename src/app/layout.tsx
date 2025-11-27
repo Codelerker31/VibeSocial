@@ -4,6 +4,9 @@ import "./globals.css";
 import AuthContext from "@/lib/auth-context";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +33,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}
       >
-        <AuthContext>
-          <Navbar />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-        </AuthContext>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthContext>
+            <Navbar />
+            <main className="flex-grow pb-16 sm:pb-0">
+              {children}
+            </main>
+            <Footer />
+            <MobileTabBar />
+            <Toaster />
+          </AuthContext>
+        </ThemeProvider>
       </body>
     </html>
   );

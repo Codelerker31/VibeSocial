@@ -56,8 +56,8 @@ export default function AccountSettingsPage() {
 
       setMessage('Password updated successfully');
       reset();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update password');
     } finally {
       setLoading(false);
     }
@@ -74,8 +74,8 @@ export default function AccountSettingsPage() {
       }
 
       signOut({ callbackUrl: '/' });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
       setShowDeleteModal(false);
     }
   };

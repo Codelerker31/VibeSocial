@@ -11,7 +11,7 @@ export default function SubmissionSuccessPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-4">Project Submitted Successfully!</h1>
       
       <p className="text-lg text-gray-600 max-w-md mb-8">
-        Your project is now under review. We'll notify you once it's approved (usually within 24 hours).
+        Your project is now under review. We&apos;ll notify you once it&apos;s approved (usually within 24 hours).
       </p>
       
       <div className="flex flex-col sm:flex-row gap-4">

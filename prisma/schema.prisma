@@ -93,6 +93,8 @@ model Project {
   
   // Engagement metrics
   engagementScore       Float         @default(0)
+  recencyFactor         Float         @default(0)
+  finalScore            Float         @default(0)
   viewCount             Int           @default(0)
   likeCount             Int           @default(0)
   commentCount          Int           @default(0)
@@ -109,6 +111,10 @@ model Project {
   @@index([slug])
   @@index([engagementScore])
   @@index([submittedAt])
+  
+  // Composite indexes for performance
+  @@index([status, engagementScore])
+  @@index([userId, status])
 }
 
 enum ProjectType {
@@ -181,6 +187,10 @@ model Interaction {
   @@index([projectId])
   @@index([type])
   @@index([createdAt])
+  
+  // Composite indexes for performance
+  @@index([projectId, type])
+  @@index([userId, projectId, type])
 }
 
 enum InteractionType {
@@ -214,5 +224,8 @@ model Comment {
   @@index([projectId])
   @@index([parentId])
   @@index([createdAt])
+  
+  // Composite indexes for performance
+  @@index([projectId, parentId])
 }
 

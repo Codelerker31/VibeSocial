@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { ProjectSubmissionSchema } from '@/lib/validations';
 import { uploadImage } from '@/lib/cloudinary';
-import { z } from 'zod';
+import { ProjectType } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         slug,
         description,
         detailedDescription,
-        projectType: projectType as any,
+        projectType: projectType as ProjectType,
         sourceUrl,
         demoUrl,
         coverImage: coverImageUrl,

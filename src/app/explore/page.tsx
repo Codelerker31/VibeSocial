@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTags } from '@/lib/tags';
+import { EmptyState } from '@/components/EmptyState';
+import { Tag as PrismaTag } from '@prisma/client';
+import { Tag } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Explore Projects | DevSocial',
@@ -26,8 +29,8 @@ export default async function ExplorePage() {
                 {category.toLowerCase().replace('_', ' ')}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {/* @ts-ignore - Iterating over keys of typed object */}
-                {groupedTags[category].map((tag: any) => (
+                {/* @ts-expect-error - Iterating over keys of typed object */}
+                {groupedTags[category].map((tag: PrismaTag) => (
                   <Link
                     key={tag.id}
                     href={`/explore/${tag.slug}`}
@@ -42,9 +45,11 @@ export default async function ExplorePage() {
         </div>
 
         {categories.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No tags found. Please seed the database.</p>
-          </div>
+          <EmptyState
+            icon={Tag}
+            title="No tags found"
+            description="Please seed the database to see available topics."
+          />
         )}
       </div>
     </div>

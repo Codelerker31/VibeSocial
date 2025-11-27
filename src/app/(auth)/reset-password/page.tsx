@@ -45,8 +45,8 @@ export default function ResetPasswordPage() {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
             Reset your password
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-green-800">Check your email</h3>
                 <div className="mt-2 text-sm text-green-700">
-                  <p>If an account exists with that email, we've sent password reset instructions.</p>
+                  <p>If an account exists with that email, we&apos;ve sent password reset instructions.</p>
                 </div>
                 <div className="mt-4">
                   <Link href="/login" className="text-sm font-medium text-green-800 hover:text-green-700">
