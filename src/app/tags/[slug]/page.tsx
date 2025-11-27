@@ -4,14 +4,15 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function TagPage({ params }: PageProps) {
+  const { slug } = await params;
   const tag = await prisma.tag.findUnique({
-    where: { slug: params.slug }
+    where: { slug }
   });
 
   if (!tag) {

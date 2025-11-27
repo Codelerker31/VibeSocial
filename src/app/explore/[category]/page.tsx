@@ -5,13 +5,14 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     category: string;
-  };
+  }>;
 }
 
 export default async function CategoryPage({ params }: PageProps) {
-  const categorySlug = params.category.toUpperCase();
+  const { category: categoryParam } = await params;
+  const categorySlug = categoryParam.toUpperCase();
   
   // Validate category
   if (!Object.values(TagCategory).includes(categorySlug as TagCategory)) {
